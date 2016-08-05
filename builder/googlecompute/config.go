@@ -42,6 +42,7 @@ type Config struct {
 	RawStateTimeout      string            `mapstructure:"state_timeout"`
 	Region               string            `mapstructure:"region"`
 	SourceImage          string            `mapstructure:"source_image"`
+	SourceImageFamily    string            `mapstructure:"source_image_family"`
 	SourceImageProjectId string            `mapstructure:"source_image_project_id"`
 	StartupScriptFile    string            `mapstructure:"startup_script_file"`
 	Subnetwork           string            `mapstructure:"subnetwork"`
@@ -142,9 +143,9 @@ func NewConfig(raws ...interface{}) (*Config, []string, error) {
 			errs, errors.New("a project_id must be specified"))
 	}
 
-	if c.SourceImage == "" {
+	if c.SourceImage == ""  && c.SourceImageFamily == "" {
 		errs = packer.MultiErrorAppend(
-			errs, errors.New("a source_image must be specified"))
+			errs, errors.New("a source_image of source_image_family must be specified"))
 	}
 
 	if c.Zone == "" {

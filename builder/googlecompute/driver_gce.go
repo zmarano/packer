@@ -110,7 +110,7 @@ func (d *driverGCE) CreateImage(name, description, family, zone, disk string) (<
 			if err != nil {
 				close(imageCh)
 			}
-			image, err = d.getImage(name, d.projectId)
+			image, err = d.getImage(name, "", d.projectId)
 			if err != nil {
 				close(imageCh)
 				errCh <- err
@@ -202,7 +202,7 @@ func (d *driverGCE) GetSerialPortOutput(zone, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	return output.Contents, nil
 }
 
@@ -215,8 +215,8 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 	}
 
 	// Get the image
-	d.ui.Message(fmt.Sprintf("Loading image: %s in project %s", c.Image.Name, c.Image.ProjectId))
-	image, err := d.getImage(c.Image.Name, c.Image.ProjectId)
+	d.ui.Message(fmt.Sprintf("Loading image %s or family %s from project %s", c.Image.Name, c.Image.Family, c.Image.ProjectId))
+	image, err := d.getImage(c.Image.Name, c.Image.Family, c.Image.ProjectId)
 	if err != nil {
 		return nil, err
 	}
@@ -350,10 +350,14 @@ func (d *driverGCE) WaitForInstance(state, zone, name string) <-chan error {
 	return errCh
 }
 
-func (d *driverGCE) getImage(name, projectId string) (image *compute.Image, err error) {
-	projects := []string{projectId, "centos-cloud", "coreos-cloud", "debian-cloud", "google-containers", "opensuse-cloud", "rhel-cloud", "suse-cloud", "ubuntu-os-cloud", "windows-cloud"}
+func (d *driverGCE) getImage(name, family, projectId string) (image *compute.Image, err error) {
+	projects := []string{projectId, "centos-cloud", "coreos-cloud", "debian-cloud", "opensuse-cloud", "rhel-cloud", "suse-cloud", "ubuntu-os-cloud", "windows-cloud"}
 	for _, project := range projects {
-		image, err = d.service.Images.Get(project, name).Do()
+		if family != "" {
+			image, err = d.service.Images.GetFromFamily(project, family).Do()
+		} else {
+			image, err = d.service.Images.Get(project, name).Do()
+		}
 		if err == nil && image != nil && image.SelfLink != "" {
 			return
 		}

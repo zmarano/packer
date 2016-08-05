@@ -20,7 +20,7 @@ func (config *Config) getImage() Image {
 	if config.SourceImageProjectId != "" {
 		project = config.SourceImageProjectId
 	}
-	return Image{Name: config.SourceImage, ProjectId: project}
+	return Image{Name: config.SourceImage, Family: config.SourceImageFamily, ProjectId: project}
 }
 
 func (config *Config) getInstanceMetadata(sshPublicKey string) (map[string]string, error) {
@@ -39,7 +39,7 @@ func (config *Config) getInstanceMetadata(sshPublicKey string) (map[string]strin
 		sshKeys = fmt.Sprintf("%s\n%s", sshKeys, confSshKeys)
 	}
 	instanceMetadata[sshMetaKey] = sshKeys
-	
+
 	// Wrap any startup script with our own startup script.
 	if config.StartupScriptFile != "" {
 		var content []byte
